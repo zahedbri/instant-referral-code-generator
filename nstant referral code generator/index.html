@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Referral Code Generator with Excel Export</title>
+  <style>
+    body {font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 0;}
+    .container {max-width: 600px; margin: 50px auto; background: #fff; padding: 20px 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
+    h1 {text-align: center; color: #4A4AFF;}
+    label {display: block; margin-top: 10px; font-weight: bold;}
+    input {width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px;}
+    button {background-color: #4A4AFF; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 15px; cursor: pointer; width: 100%;}
+    button:hover {background-color: #3737cc;}
+    .result {margin-top: 20px; text-align: center;}
+    .code-box {font-family: monospace; font-size: 18px; background: #f0f0f0; padding: 10px; border-radius: 5px; display: inline-block; margin-top: 10px;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Referral Code Generator</h1>
+    <label for="name">Student Name:</label>
+    <input type="text" id="name" placeholder="Enter student name">
+
+    <label for="phone">Phone Number:</label>
+    <input type="text" id="phone" placeholder="Enter phone number">
+
+    <label for="email">Email Address:</label>
+    <input type="email" id="email" placeholder="Enter email address">
+
+    <button id="generate">Generate Referral Code</button>
+    <button id="downloadExcel">Download Excel</button>
+
+    <div class="result">
+      <h3>Your Referral Code:</h3>
+      <div class="code-box" id="referralCode">—</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    const studentData = [];
+
+    function generateReferralCode(name, phone, email) {
+      const base = (name + phone + email).replace(/\s+/g, '').toUpperCase();
+      let hash = 0;
+      for (let i = 0; i < base.length; i++) {
+        hash = base.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      let code = '';
+      for (let i = 0; i < 8; i++) {
+        const value = (hash >> (i * 4)) & 0xf;
+        code += value.toString(16).toUpperCase();
+      }
+      return `REF-${code}`;
+    }
+
+    document.getElementById('generate').addEventListener('click', () => {
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      if (!name || !phone || !email) {
+        alert('Please fill in all fields!');
+        return;
+      }
+
+      const code = generateReferralCode(name, phone, email);
+      document.getElementById('referralCode').textContent = code;
+
+      studentData.push({ Name: name, Phone: phone, Email: email, ReferralCode: code });
+    });
+
+    document.getElementById('downloadExcel').addEventListener('click', () => {
+      if (studentData.length === 0) {
+        alert('No student data available to export!');
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(studentData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Referral Codes');
+
+      XLSX.writeFile(workbook, 'student_referral_codes.xlsx');
+    });
+  </script>
+</body>
+</html>
